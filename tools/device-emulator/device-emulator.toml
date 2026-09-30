@@ -1,0 +1,29 @@
+# Hub emulator configuration. Path given as the first argument, or this file
+# next to the executable.
+
+# The TCP listener of your service.
+server = "127.0.0.1:9000"
+
+# Device ids first_device .. first_device + devices - 1.
+devices = 200000
+first_device = 0
+
+# Hubs to emulate, one TCP connection each. The devices are split into
+# disjoint ranges, one per hub: a device reports through one hub at a time.
+connections = 4
+
+# Total records per second over all hubs. 0: as fast as the sockets take them.
+records_per_second = 20000000
+
+# Records in one batch, chosen at random in this range. At most 341 (16 KB body).
+records_per_batch_min = 8
+records_per_batch_max = 64
+
+# Stop after this many seconds. 0: run until interrupted.
+duration_seconds = 0
+
+# Print progress this often, in seconds. 0: only at the end.
+report_every_seconds = 5
+
+# Random seed for the record values. The same seed gives the same stream, apart from the timestamps.
+seed = 42

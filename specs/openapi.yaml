@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Micro-device telemetry API
+  version: "1.0"
+  description: >
+    Read side of the telemetry service. The service ingests batches from hubs
+    over TCP (see README.md) and keeps the latest record of every device. The
+    endpoint returns 404 until the device has sent at least one record.
+
+servers:
+  - url: http://127.0.0.1:5080
+
+paths:
+  /devices/{deviceId}/latest:
+    get:
+      summary: Newest record of a device
+      operationId: getLatest
+      parameters:
+        - $ref: "#/components/parameters/deviceId"
+      responses:
+        "200":
+          description: The newest record.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelemetryPoint"
+        "404":
+          description: The device has not sent a record yet.
+
+components:
+  parameters:
+    deviceId:
+      name: deviceId
+      in: path
+      required: true
+      description: Device id as carried in the batch header (unsigned 32-bit).
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 4294967295
+
+  schemas:
+    TelemetryPoint:
+      type: object
+      description: One record as the API returns it. Fixed-point wire fields are converted to units.
+      required:
+        - sequence
+        - timestampUnixMicros
+        - temperature
+        - voltage
+        - latitude
+        - longitude
+        - altitudeM
+        - horizontalAccuracyM
+        - status
+      properties:
+        sequence:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Record sequence number, per device, strictly increasing (unsigned 64-bit on the wire).
+        timestampUnixMicros:
+          type: integer
+          format: int64
+          description: Device clock, microseconds since the Unix epoch.
+        temperature:
+          type: number
+          format: float
+          description: Degrees Celsius.
+        voltage:
+          type: number
+          format: float
+          description: Volts.
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          description: Degrees. Null when the record has no position fix.
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          description: Degrees. Null when the record has no position fix.
+        altitudeM:
+          type: number
+          format: double
+          nullable: true
+          description: Metres above the WGS84 ellipsoid. Null when the record has no position fix.
+        horizontalAccuracyM:
+          type: number
+          format: double
+          nullable: true
+          description: Metres. Null when the record has no position fix.
+        status:
+          type: array
+          description: Status flags set on the record, by name. Empty when none is set.
+          items:
+            type: string
+            enum:
+              - PositionValid
+              - OnBattery
+              - Charging
+              - SensorFault
+              - ClockUnsynced
+      example:
+        sequence: 1790719292647
+        timestampUnixMicros: 1790719299317939
+        temperature: 34.28
+        voltage: 3.59
+        latitude: 69.2533909
+        longitude: 124.3916601
+        altitudeM: -474.06
+        horizontalAccuracyM: 20.95
+        status: ["PositionValid"]
